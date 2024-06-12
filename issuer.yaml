@@ -1,0 +1,18 @@
+issuer.yaml
+
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: myapp-issuer
+  namespace: default
+spec:
+  acme:
+    email: ####
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      # Hesabın özel anahtarını depolamak için kullanılacak gizli kaynak
+      name: myapp-tls
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
