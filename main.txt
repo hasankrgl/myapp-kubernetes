@@ -1,0 +1,275 @@
+Readme.txt
+
+
+Uygulama olarak basit bir şekilde Hello World yazdıran bir json paketi hazırlayalım;
+
+aynı dizinde ayrı bir index.js oluşturalım.
+
+
+
+Adım 1: Uygulamanın Dockerize Edilmesi
+
+Uygulamanızı Docker container'ına paketlemek, uygulamanızın her ortamda aynı şekilde çalışmasını sağlar ve Kubernetes tarafından yönetilebilir hale getirir.
+
+
+Dockerize edilecek uygulamanız için bir Dockerfile oluşturun.
+
+Docker Image Oluşturma:
+
+Dockerfile'ı kullanarak Docker image'ınızı oluşturun.
+
+bash
+docker build -t myapp:latest .
+
+
+Docker Image'ı Docker Registry'e Yükleme:
+
+# Image'ı etiketleyin
+docker tag myapp:latest myusername/myapp:latest
+
+# Docker Hub'a push edin
+docker push myusername/myapp:latest
+
+
+
+
+Adım 2: Helm Chart olusturma
+
+Helm, Kubernetes için bir paket yöneticisidir. Bir uygulamanın Kubernetes üzerinde kurulumu, yapılandırması ve yönetimi için gereken tüm bileşenleri bir araya getiren bir araçtır. 
+Helm, uygulamaları bir dizi şablon ve değer dosyası kullanarak paketler ve bu paketlere "chart" adı verilir.
+
+helm create myapp-chart 
+
+
+
+Adım 3: kubernetes ortamını kurma ve örnek app/service olusturma
+
+deployment,service gibi dosyaları myapp-chart/templates dizini altında oluşturulur.
+
+
+
+Helm ile uygulamanızı Kubernetes cluster'ınıza dağıtın:
+helm install myapp ./myapp-chart
+
+
+
+
+Pod ismini almak;
+export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=myapp-chart,app.kubernetes.io/instance=myapp" -o jsonpath="{.items[0].metadata.name}")
+Container portunu almak;
+export CONTAINER_PORT=$(kubectl get pod --namespace default $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+
+Port Yönlendirme:
+kubectl --namespace default port-forward $POD_NAME 8080:$CONTAINER_PORT
+
+Yönlendirme ile http://localhost:8080 adresine curl attıgımızda hello world karşımıza cıkacaktır.
+
+port-forward yerine ingress veya loadbalancer kullanımı üretim ortamlarında daha sağlıklıdır.
+
+
+
+Adım 4: Yük Testi ve Ölçeklendirme
+
+
+
+apache-bench ile uygulamaya yük testi yapılabilir;
+
+
+ab -n 1000 -c 10 http://127.0.0.1:8080/ 
+komutu ile adrese, 1000 adet istek gönderilir aynı anda 10 farklı kullanıcı işlem yapar, isteklere karşı cevap verdiği süre gibi basit bir ölçeklendirme yapabiliriz.
+
+Server Software:        
+Server Hostname:        localhost
+Server Port:            8080
+
+Document Path:          /
+Document Length:        12 bytes
+
+Concurrency Level:      10
+Time taken for tests:   50.883 seconds
+Complete requests:      1000
+Failed requests:        0
+Total transferred:      211000 bytes
+HTML transferred:       12000 bytes
+Requests per second:    19.65 [#/sec] (mean)
+Time per request:       508.833 [ms] (mean)
+Time per request:       50.883 [ms] (mean, across all concurrent requests)
+Transfer rate:          4.05 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.0      0       1
+Processing:   505  509   2.2    508     529
+Waiting:        4    7   2.1      7      29
+Total:        505  509   2.2    508     529
+
+Percentage of the requests served within a certain time (ms)
+  50%    508
+  66%    509
+  75%    510
+  80%    510
+  90%    511
+  95%    513
+  98%    514
+  99%    516
+ 100%    529 (longest request)
+
+Yukarıdaki sonuçları analiz etmek istersek;
+Requests per second (İstek/Saniye): 
+Saniyede yaklaşık 19.65 istek sunucunuz tarafından işlenebiliyor. Bu, uygulamanın ne kadar yük altında çalışabileceğini gösterir.
+
+Time per request (İstek Başına Süre): 
+Her bir isteğin tamamlanması ortalama 508.833 ms sürüyor. Bu süre, kullanıcı deneyimi açısından önemli bir metriktir. 
+Düşük sürelere sahip olmak her zaman daha iyidir.
+
+Failed requests (Başarısız İstekler): 
+0 başarısız istek olması, sunucunun bu yük altında başarılı bir şekilde çalıştığını gösterir.
+
+Transfer rate (Transfer Hızı): 
+Ortalama 4.05 Kbyte/saniye veri transfer ediliyor. Bu, uygulamanın ne kadar veri işleyebildiğini gösterir.
+
+Connection Times (Bağlantı Zamanları): 
+Bağlantı süreleri oldukça düşük (ortalama 0 ms), bu da yerel ağda çalıştığını ve ağ gecikmesinin minimum olduğunu gösterir.
+
+Processing Times (İşlem Zamanları): 
+İşlem süreleri oldukça tutarlı (ortalama 509 ms), ancak en uzun işlem süresi 529 ms. 
+Bu, uygulamanın tutarlı bir şekilde çalıştığını gösterir, ancak bazı isteklerin diğerlerinden biraz daha uzun sürdüğünü de gösterir.
+ 
+ 
+Sonuçlar, uygulamanızın bu test koşulları altında oldukça iyi performans gösterdiğini ortaya koyuyor. Sunucu, 10 eşzamanlı kullanıcı ile saniyede yaklaşık 19.65 isteği işleyebiliyor ve bu yük altında hiçbir istek başarısız olmuyor. 
+İsteklerin işlenme süreleri tutarlı ve kabul edilebilir düzeyde. Bu testin sonucuna göre, uygulamanın mevcut yük altında iyi performans gösterdiği söylenebilir.
+
+Daha yüksek yükler altında nasıl performans gösterdiğini görmek için, istek sayısını ve eşzamanlı kullanıcı sayısını artırarak benzer testleri yapabilirsiniz. 
+Bu, uygulamanın ölçeklenebilirliğini ve daha yüksek yükler altında nasıl davrandığını anlamamızı sağlayacaktır.
+Daha detaylı yük dağılımı için apache-jmeter teknolojisini de kullanabiliriz.
+
+
+apache-bench ile yük testi yaparken test edebileceğimiz bir diğer konu ise; Kubernetes'in otomatik ölçeklendirmesidir.
+CPU veya RAM kullanım oranlarının belirli bir eşiği geçtiği durumlarda kubernetesin yeni podlar oluşturup dağılımı nasıl yaptığını gözlemleyelim.
+Öncelikle deployment.yaml dosyamıza cpu ve ram limitlerini ve isteklerini belirtelim. Yaml dosyasında containerlara özel olarak tanımlayabiliriz;
+      containers:
+      - name: myapp
+        image: your-image
+        resources:
+          requests:
+            cpu: "100m"
+          limits:
+            cpu: "200m"
+			
+			
+CPU üzerinden gidelim ve Horizontal Pod Autoscaler (HPA) olusturalım.
+Buradaki apiversion'ı seçmeden önce kubectl api-versions |grep autoscaling komutu ile doğrusunu öğrenmeliyiz.
+
+Bu sefer cpu'nun zorlanması için daha yüksek değerler vererek tekrardan aynı komutu calıstıralım;
+ab -n 10000 -c 100 http://127.0.0.1:8080/
+
+minikube üzerinden metrics-server ile izliyoruz;
+Apache bench'in verdiği çıktılar;
+
+Server Software:
+Server Hostname:        127.0.0.1
+Server Port:            8080
+
+Document Path:          /
+Document Length:        12 bytes
+
+Concurrency Level:      100
+Time taken for tests:   51.392 seconds
+Complete requests:      10000
+Failed requests:        0
+Total transferred:      2110000 bytes
+HTML transferred:       120000 bytes
+Requests per second:    194.58 [#/sec] (mean)
+Time per request:       513.917 [ms] (mean)
+Time per request:       5.139 [ms] (mean, across all concurrent requests)
+Transfer rate:          40.09 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.2      0       2
+Processing:   502  511  31.7    507     817
+Waiting:        3   10  27.8      5     308
+Total:        502  511  31.8    507     820
+
+Percentage of the requests served within a certain time (ms)
+  50%    507
+  66%    507
+  75%    508
+  80%    508
+  90%    509
+  95%    513
+  98%    594
+  99%    621
+ 100%    820 (longest request)
+
+Ortalama olarak saniyede 194.58 istek yapılmış
+Ortalama bir isteğin işlenme süresi 513.917 ms (ya da 5.139 ms concurrent isteklerde).
+Bağlantı zamanları ve işleme süreleri genellikle düşük düzeyde kalmış, maksimum işleme süresi 817 ms olarak gözlemlenmiş.
+Bekleme süreleri düşük seviyede, maksimum bekleme süresi 308 ms.
+
+HorizontalPodAutoscaler (HPA) Çıktısı
+
+NAME            REFERENCE              TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+myapp-app-hpa   Deployment/myapp-app   cpu: 4%/50%   1         10        3          13m
+myapp-app-hpa   Deployment/myapp-app   cpu: 4%/50%   1         10        3          14m
+myapp-app-hpa   Deployment/myapp-app   cpu: 36%/50%  1         10        1          14m
+
+cpu: 4%/50%: Bu, HPA'nın hedef olarak belirlenen CPU kullanım oranıyla gerçekleşen CPU kullanım oranını gösterir. 
+Burada %36 kullanım, %50 hedefi aşmış ve bu nedenle HPA, replica sayısını artırmak için harekete geçmiş
+
+REPLICAS: HPA, pod sayısını otomatik olarak yönetmiş. Başlangıçta 3 pod vardı, ancak CPU kullanım oranı arttığında HPA pod sayısını 1'e düşürmüş.
+
+HPA, Kubernetes kümesindeki CPU kullanımını izleyerek, belirli bir eşiği aşan durumlarda pod sayısını otomatik olarak artırıp azaltarak ölçeklendirme sağlamış.
+
+Adım 5: Kubernetes üzerinde SSL sertifikası yönetimi
+
+Secure socket yapmak icin self-signed bir sertifika olusturup ingress-nginx-controller 'ı load balancer olarak kullanacağız.
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=127.0.0.1.nip.io" komutu ile oluşturabiliriz.
+
+Yukarıdaki komut ile oluşmuş olan .key ve .crt dosyalarını base64 ile enkript edip secret dosyasına ekleyeceğiz.
+Aşağıdaki komutlar ile enkript edeceğiz.
+cat tls.crt | base64 -w 0
+cat tls.key | base64 -w 0
+
+myapp-tls isimli oluşan secret dosyası uygulamanın yüklendiği default namespace'indeydi. Ingress-nginx-controller'ı ise ingress-nginx namespace'inde yükledik. 
+LoadBalancer secret dosyasından gerekli bilgileri alması için ingress-nginx namespace'inde aynı secret'ı oluşturmamız gerekli.
+
+
+Helm  üzerinden dağıtım yaptığımız için ingress, certificate, issuer ve secret gibi dosyaları gerekli path üzerinde olusturuyoruz.
+helm upgrade --install myapp ./myapp-chart --namespace default  --> komutu ile değişikliklerimizi clusterımıza dağıtıyoruz.
+
+
+
+Uygulamamızın dış dünyadan erişilebilmesi için Ingress-Nginx kullanarak bir Ingress controller kurduk. Ingress, HTTP ve HTTPS yönlendirmeleri sağlayan bir Kubernetes kaynağıdır.
+Cert-Manager, Kubernetes üzerinde otomatik olarak TLS sertifikaları yönetmek için kullanıldı.
+
+Tanımladıgımız servisi load balancer olarak kullanıp bağlantıyı test edelim;
+öncelikle yeni bir terminalde "minikube tunnel" komutunu calıstıracağız,
+servisimiz externalIP değerini vermeye başlayacak bu komuttan sonra.
+
+Ardından tekrar yeni bir terminalde alttaki komut ile uygulamaya ulaşabileceğimiz url'i alabiliriz:
+minikube service myapp-myapp-chart --url | sed -e 's/http/https/' 
+
+
+En baştaki terminalimize dönerek deneme yapacağız;
+curl https://127.0.0.1:42665 
+
+Hello World! çıktısın gördüğümüzde SSL konfigürasyonunun başarılı bir şekilde yapıldığını gözlemliyoruz.
+
+
+
+Adım 6: Gelişmiş Yapılandırma ve Yönetim:
+
+Kubernetes üzerinde rolling updates, canary deployments gibi gelişmiş dağıtım stratejilerini gözlemleyelim:
+
+deployment.yaml dosyasında spec bölümü altına strategy kısmına rollingUpdate deploy şekli eklenebilir.
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+	  
+Bu eklenen blok; maksimum bir pod'un güncelleme sırasında kullanılamaz olmasına ve bir ek pod'un anında oluşturulmasına izin verir.
+Bu sayede herhangi bir ortamda pod'lara kesinti vermeden yeni versiyona  kolayca geçiş yapılabilir.
+
