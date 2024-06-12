@@ -1,0 +1,85 @@
+Dockerizing and Deploying a Simple Hello World Application with Kubernetes
+Goal: Create a simple JSON package that prints "Hello World" as an application. Then, set up a web server using Kubernetes to provide high scalability and reliability.
+
+Step 1: Dockerizing the Application
+Purpose: Packaging your application into a Docker container ensures that it runs the same way in any environment and makes it manageable by Kubernetes.
+Create a Dockerfile: For your application to be dockerized.
+
+Build the Docker Image:
+docker build -t myapp:latest .
+
+Push the Docker Image to Docker Registry:
+docker tag myapp:latest myusername/myapp:latest
+docker push myusername/myapp:latest
+
+Step 2: Creating a Helm Chart
+Purpose: Helm is a package manager for Kubernetes. It combines all the components needed for deploying, configuring, and managing an application on Kubernetes.
+Create a Helm Chart:
+helm create myapp-chart
+
+Step 3: Setting Up Kubernetes Environment and Creating Example App/Service
+Purpose: Define and create the necessary files like deployment, service under myapp-chart/templates.
+Deploy the Application to Kubernetes Cluster Using Helm
+helm install myapp ./myapp-chart
+
+Get the Pod Name:
+export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=myapp-chart,app.kubernetes.io/instance=myapp" -o jsonpath="{.items[0].metadata.name}")
+Get the Container Port:
+export CONTAINER_PORT=$(kubectl get pod --namespace default $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+Port Forwarding:
+kubectl --namespace default port-forward $POD_NAME 8080:$CONTAINER_PORT
+
+Access the application at http://localhost:8080 with curl:
+curl http://localhost:8080
+# Expected output: Hello World!
+
+In production environments, it's better to use ingress or loadbalancer instead of port-forward.
+
+Step 4: Load Testing and Scaling
+Purpose: Use apache-bench to load test your application.
+ab -n 1000 -c 10 http://127.0.0.1:8080/
+
+Sample output analysis:
+Requests per second: Approximately 19.65 requests per second.
+Time per request: Average of 508.833 ms per request.
+Failed requests: 0, indicating the server handled the load successfully.
+Transfer rate: Average of 4.05 Kbytes/second.
+
+Step 5: Managing SSL Certificates on Kubernetes
+Purpose: Create a self-signed certificate for secure socket connection.
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=127.0.0.1.nip.io"
+Base64 Encode the .key and .crt Files:
+cat tls.crt | base64 -w 0
+cat tls.key | base64 -w 0
+
+Create a Secret in the ingress-nginx Namespace
+Deploy with Helm:
+helm upgrade --install myapp ./myapp-chart --namespace default
+
+Test the Connection:
+minikube tunnel
+minikube service myapp-myapp-chart --url | sed -e 's/http/https/'
+
+# In another terminal
+curl https://127.0.0.1:42665
+# Expected output: Hello World!
+
+
+Step 6: Advanced Configuration and Management
+Purpose: Learn and implement advanced deployment strategies such as rolling updates.
+Example Rolling Update Strategy in deployment.yaml
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+      
+This configuration allows only one pod to be unavailable during the update and creates one additional pod instantly, ensuring a smooth transition without downtime.
+
+
+
+
+
+
+
