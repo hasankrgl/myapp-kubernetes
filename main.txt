@@ -258,7 +258,7 @@ Hello World! çıktısın gördüğümüzde SSL konfigürasyonunun başarılı b
 
 Adım 6: Gelişmiş Yapılandırma ve Yönetim:
 
-Kubernetes üzerinde rolling updates, canary deployments gibi gelişmiş dağıtım stratejilerini gözlemleyelim:
+Kubernetes üzerinde rolling updates gibi gelişmiş dağıtım stratejilerini gözlemleyelim:
 
 deployment.yaml dosyasında spec bölümü altına strategy kısmına rollingUpdate deploy şekli eklenebilir.
 
