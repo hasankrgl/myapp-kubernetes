@@ -1,5 +1,3 @@
-Readme.txt
-
 
 Uygulama olarak basit bir şekilde Hello World yazdıran bir json paketi hazırlayalım;
 
