@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myapp-ingress
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/issuer: "myapp-issuer"  # Burada issuer adınızı vermelisiniz
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: 127.0.0.1.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: myapp-myapp-chart
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+        - 127.0.0.1.nip.io
+      secretName: myapp-tls
