@@ -1,0 +1,40 @@
+# Use the official Node.js image
+FROM node:14-alpine
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json to container
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the application code to the container
+COPY . .
+
+# Expose the port that the app runs on
+ENV PORT 8080
+EXPOSE 8080
+
+# Command to run the application
+CMD ["node", "index.js"]
+
+
+
+(Bu kodlar, bir Node.js uygulamasının Docker konteynerine paketlenmesi için temel bir Docker dosyasını tanımlar. İşte kod parçalarının açıklamaları:
+FROM node:14-alpine: Bu komut, Node.js'in 14 sürümünü temel alan Alpine Linux tabanlı bir imajı kullanarak bir Docker imajı oluşturur.
+
+WORKDIR /app: Bu komut, /app dizinini çalışma dizini olarak ayarlar, yani bundan sonraki komutlar bu dizinde çalışacaktır.
+
+COPY package*.json ./: Bu komut, yerel package.json ve package-lock.json dosyalarını Docker imajına kopyalar. Bu dosyaların kopyalanması, bağımlılıkların Docker imajına yüklenmesini sağlar.
+
+RUN npm install: Bu komut, Docker imajı içindeki bağımlılıkları yüklemek için npm install komutunu çalıştırır.
+
+COPY . .: Bu komut, mevcut dizindeki tüm dosyaları Docker imajına kopyalar. Uygulamanın tüm kodunu Docker imajına kopyalamayı sağlar.
+
+EXPOSE 8080: Bu komut, 8080 numaralı porta uygulamanın bağlanabileceğini belirtir. Ancak uygulama dışarıdan erişilebilir olması için Docker çalıştırılırken bu portun etkinleştirilmesi gerekir.
+
+CMD ["npm", "start"]: Bu komut, Docker konteyneri çalıştırıldığında uygulamanın başlatılması için kullanılacak komutu belirtir. Bu durumda, npm start komutuyla uygulama başlatılır.
+
+Bu Docker dosyası, bir Node.js uygulamasını Docker konteynerine paketlemek için gerekli adımları tanımlar ve uygulamanın Docker'da çalıştırılmasını sağlar.)
