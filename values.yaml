@@ -1,0 +1,80 @@
+values.yaml (/myapp)
+
+#values.yaml dosyası, Helm chart'ının yapılandırma parametrelerini içerir. 
+#Bu dosyada, uygulamanın Docker imajı, servis türü, replica sayısı, ingress ayarları gibi parametreler tanımlandı.
+
+
+
+namespace: default
+replicaCount: 1
+
+image:
+  repository: hasankrgl/myapp
+  pullPolicy: IfNotPresent
+  tag: latest
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: LoadBalancer
+  port: 8080
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: 127.0.0.1.nip.io      ### IP yazmak yerine kullanılan eklenti 
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: myapp-tls
+      hosts:
+        - 127.0.0.1.nip.io
+  
+    
+
+resources: {}
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 8080
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 8080
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+volumes: []
+
+volumeMounts: []
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
