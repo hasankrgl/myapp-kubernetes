@@ -30,3 +30,34 @@ Kubernetes üzerinde SSL sertifikası yönetimi.
 Kubernetes üzerinde rolling updates gibi gelişmiş dağıtım stratejilerini öğrenin ve uygulayın.
 
 
+ENG
+
+Web Server Application with Kubernetes
+Goal: To build an infrastructure that provides high scalability and reliability using Kubernetes as a web server for an application.
+
+Steps and Explanations:
+
+1-)Dockerizing the Application:
+Learn how to package your application into a Docker container and create a Dockerfile.
+Creating and Managing a Kubernetes Cluster:
+
+2-)Set up a Kubernetes cluster and understand its management practices.
+
+
+3-)Deploying the Application Using Helm Chart:
+Create a Helm Chart for your application.
+Define Kubernetes objects such as Deployment, Service, and Ingress within the Helm Chart.
+Add advanced features such as custom configuration options, automatic scaling, and update strategies.
+
+
+4-)Load Testing and Scaling:
+Use tools like Apache Bench or JMeter to perform load testing on your application running on Kubernetes.
+Learn how to use Kubernetes' automatic scaling features.
+Test how Kubernetes handles high traffic by automatically creating and distributing new pods.
+
+5-)Security:
+Manage SSL certificates on Kubernetes.
+
+6-)Advanced Configuration and Management:
+Learn and implement advanced deployment strategies such as rolling updates on Kubernetes.
+
