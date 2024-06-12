@@ -23,6 +23,7 @@ CMD ["node", "index.js"]
 
 
 (Bu kodlar, bir Node.js uygulamasının Docker konteynerine paketlenmesi için temel bir Docker dosyasını tanımlar. İşte kod parçalarının açıklamaları:
+
 FROM node:14-alpine: Bu komut, Node.js'in 14 sürümünü temel alan Alpine Linux tabanlı bir imajı kullanarak bir Docker imajı oluşturur.
 
 WORKDIR /app: Bu komut, /app dizinini çalışma dizini olarak ayarlar, yani bundan sonraki komutlar bu dizinde çalışacaktır.
