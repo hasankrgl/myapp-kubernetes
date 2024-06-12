@@ -46,7 +46,7 @@ spec:
           fieldPath: metadata.namespace
     - name: LD_PRELOAD
       value: /usr/local/lib/libmimalloc.so
-    image: registry.k8s.io/ingress-nginx/controller:v1.10.1@sha256:e24f39d3eed6bcc239a56f20098878845f62baa34b9f2be2fd2c38ce9fb0f29e
+    image: registry.k8s.io/ingress-nginx/controller:v1.10.1@sha256:###
     imagePullPolicy: IfNotPresent
     lifecycle:
       preStop:
@@ -179,9 +179,9 @@ status:
     status: "True"
     type: PodScheduled
   containerStatuses:
-  - containerID: docker://4bd12b717a2bbf65ad0120862c5759f14d9d8cb993272d8ba9ebbf62b77ca96a
-    image: sha256:ee54966f3891d75b255d160236368a4f9d3b588d32fb44bd04aea5101143e829
-    imageID: docker-pullable://registry.k8s.io/ingress-nginx/controller@sha256:e24f39d3eed6bcc239a56f20098878845f62baa34b9f2be2fd2c38ce9fb0f29e
+  - containerID: docker://#
+    image: sha256:#
+    imageID: docker-pullable://registry.k8s.io/ingress-nginx/controller@sha256:#
     lastState: {}
     name: controller
     ready: true
